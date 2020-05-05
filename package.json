@@ -1,0 +1,13 @@
+{
+  "name": "com.laicasaane.unity-addressables-manager",
+  "displayName": "Unity Addressables Manager",
+  "version": "1.0.0",
+  "unity": "2019.1",
+  "license": "MIT",
+  "description": "Unity Addressables Manager",
+  "category": "library",
+  "author": "Laicasaane <laicasaane@outlook.com> (https://github.com/laicasaane)",
+  "dependencies": {
+    "com.unity.addressables": "1.6.0"
+  }
+}

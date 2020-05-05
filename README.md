@@ -1,2 +1,1 @@
-# unity-addressables-manager
-Unity Addressables Manager
+# Unity Addressables Manager
