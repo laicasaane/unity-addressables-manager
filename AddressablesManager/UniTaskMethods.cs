@@ -1,7 +1,7 @@
-﻿#if !ADDRESSABLES_UNITASK
+﻿#if ADDRESSABLES_UNITASK
 
-using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
 
 namespace UnityEngine.AddressableAssets
 {
@@ -11,30 +11,30 @@ namespace UnityEngine.AddressableAssets
 
     public static partial class AddressablesManager
     {
-        public static async Task<OperationResult<IResourceLocator>> InitializeAsync()
+        public static async UniTask<OperationResult<IResourceLocator>> InitializeAsync()
         {
             Clear();
 
             var operation = Addressables.InitializeAsync();
-            await operation.Task;
+            await operation;
 
             OnInitializeCompleted(operation);
             return operation;
         }
 
-        public static async Task<OperationResult<object>> LoadLocationsAsync(object key)
+        public static async UniTask<OperationResult<object>> LoadLocationsAsync(object key)
         {
             if (key == null)
                 return new OperationResult<object>(false, key);
 
             var operation = Addressables.LoadResourceLocationsAsync(key);
-            await operation.Task;
+            await operation;
 
             OnLoadLocationsCompleted(operation, key);
             return new OperationResult<object>(operation.Status == AsyncOperationStatus.Succeeded, key);
         }
 
-        public static async Task<OperationResult<T>> LoadAssetAsync<T>(string key) where T : Object
+        public static async UniTask<OperationResult<T>> LoadAssetAsync<T>(string key) where T : Object
         {
             if (!GuardKey(key, out key))
                 return default;
@@ -42,7 +42,7 @@ namespace UnityEngine.AddressableAssets
             if (!_assets.ContainsKey(key))
             {
                 var operation = Addressables.LoadAssetAsync<T>(key);
-                await operation.Task;
+                await operation;
 
                 OnLoadAssetCompleted(operation, key);
                 return operation;
@@ -55,7 +55,7 @@ namespace UnityEngine.AddressableAssets
             return default;
         }
 
-        public static async Task<OperationResult<T>> LoadAssetAsync<T>(AssetReferenceT<T> reference) where T : Object
+        public static async UniTask<OperationResult<T>> LoadAssetAsync<T>(AssetReferenceT<T> reference) where T : Object
         {
             if (!GuardKey(reference, out var key))
                 return default;
@@ -63,7 +63,7 @@ namespace UnityEngine.AddressableAssets
             if (!_assets.ContainsKey(key))
             {
                 var operation = reference.LoadAssetAsync<T>();
-                await operation.Task;
+                await operation;
 
                 OnLoadAssetCompleted(operation, key);
                 return operation;
@@ -76,7 +76,7 @@ namespace UnityEngine.AddressableAssets
             return default;
         }
 
-        public static async Task<OperationResult<SceneInstance>> LoadSceneAsync(string key,
+        public static async UniTask<OperationResult<SceneInstance>> LoadSceneAsync(string key,
             LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
         {
             if (!GuardKey(key, out key))
@@ -86,13 +86,13 @@ namespace UnityEngine.AddressableAssets
                 return new OperationResult<SceneInstance>(true, _scenes[key]);
 
             var operation = Addressables.LoadSceneAsync(key, loadMode, activeOnLoad, priority);
-            await operation.Task;
+            await operation;
 
             OnLoadSceneCompleted(operation, key);
             return operation;
         }
 
-        public static async Task<OperationResult<SceneInstance>> LoadSceneAsync(AssetReference reference,
+        public static async UniTask<OperationResult<SceneInstance>> LoadSceneAsync(AssetReference reference,
             LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
         {
             if (!GuardKey(reference, out var key))
@@ -102,13 +102,13 @@ namespace UnityEngine.AddressableAssets
                 return new OperationResult<SceneInstance>(true, _scenes[key]);
 
             var operation = reference.LoadSceneAsync(loadMode, activeOnLoad, priority);
-            await operation.Task;
+            await operation;
 
             OnLoadSceneCompleted(operation, key);
             return operation;
         }
 
-        public static async Task<OperationResult<SceneInstance>> UnloadSceneAsync(string key, bool autoReleaseHandle = true)
+        public static async UniTask<OperationResult<SceneInstance>> UnloadSceneAsync(string key, bool autoReleaseHandle = true)
         {
             if (!GuardKey(key, out key))
                 return default;
@@ -119,12 +119,12 @@ namespace UnityEngine.AddressableAssets
             _scenes.Remove(key);
 
             var operation = Addressables.UnloadSceneAsync(scene, autoReleaseHandle);
-            await operation.Task;
+            await operation;
 
             return operation;
         }
 
-        public static async Task<OperationResult<SceneInstance>> UnloadSceneAsync(AssetReference reference)
+        public static async UniTask<OperationResult<SceneInstance>> UnloadSceneAsync(AssetReference reference)
         {
             if (!GuardKey(reference, out var key))
                 return default;
@@ -135,32 +135,32 @@ namespace UnityEngine.AddressableAssets
             _scenes.Remove(key);
 
             var operation = reference.UnLoadScene();
-            await operation.Task;
+            await operation;
 
             return operation;
         }
 
-        public static async Task<OperationResult<GameObject>> InstantiateAsync(string key,
+        public static async UniTask<OperationResult<GameObject>> InstantiateAsync(string key,
             Transform parent = null, bool inWorldSpace = false, bool trackHandle = true)
         {
             if (!GuardKey(key, out key))
                 return default;
 
             var operation = Addressables.InstantiateAsync(key, parent, inWorldSpace, trackHandle);
-            await operation.Task;
+            await operation;
 
             OnInstantiateCompleted(operation, key);
             return operation;
         }
 
-        public static async Task<OperationResult<GameObject>> InstantiateAsync(AssetReference reference,
+        public static async UniTask<OperationResult<GameObject>> InstantiateAsync(AssetReference reference,
             Transform parent = null, bool inWorldSpace = false)
         {
             if (!GuardKey(reference, out var key))
                 return default;
 
             var operation = reference.InstantiateAsync(parent, inWorldSpace);
-            await operation.Task;
+            await operation;
 
             OnInstantiateCompleted(operation, key);
             return operation;

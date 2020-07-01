@@ -2,7 +2,9 @@
     "name": "Unity.AddressablesManager",
     "references": [
         "Unity.Addressables",
-        "Unity.ResourceManager"
+        "Unity.ResourceManager",
+        "UniTask",
+        "UniTask.Addressables"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
@@ -12,5 +14,11 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": []
+    "versionDefines": [
+        {
+            "name": "com.cysharp.unitask",
+            "expression": "",
+            "define": "ADDRESSABLES_UNITASK"
+        }
+    ]
 }
