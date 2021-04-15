@@ -5,6 +5,12 @@
 
 # Changelog
 
+## 1.2.0
+
+- Support synchronous APIs in Addressables 1.17
+- Improve exceptions and logs handling
+- Exceptions and logs handling behaviours can be changed via `AddressablesManager.ExceptionHandle`, `AddressablesManager.SuppressErrorLogs` and `AddressablesManager.SuppressWarningLogs` properties
+
 ## 1.1.0
 
 - Use UniTask when it is included in the project
