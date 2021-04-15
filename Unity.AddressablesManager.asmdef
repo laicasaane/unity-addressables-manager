@@ -6,7 +6,6 @@
         "UniTask",
         "UniTask.Addressables"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -19,6 +18,12 @@
             "name": "com.cysharp.unitask",
             "expression": "",
             "define": "ADDRESSABLES_UNITASK"
+        },
+        {
+            "name": "com.unity.addressables",
+            "expression": "1.17",
+            "define": "ADDRESSABLES_1_17"
         }
-    ]
+    ],
+    "noEngineReferences": false
 }

@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using UnityEngine.SceneManagement;
+﻿using System;
+using System.Collections.Generic;
 
 namespace UnityEngine.AddressableAssets
 {
@@ -8,6 +8,11 @@ namespace UnityEngine.AddressableAssets
 
     public static partial class AddressablesManager
     {
+        public enum ExceptionHandleType
+        {
+            Log, Throw, Suppress
+        }
+
         private static readonly Dictionary<string, List<IResourceLocation>> _locations;
         private static readonly List<IResourceLocation> _noLocation;
         private static readonly Dictionary<string, Object> _assets;
@@ -16,13 +21,19 @@ namespace UnityEngine.AddressableAssets
         private static readonly Queue<List<GameObject>> _instanceListPool;
         private static readonly List<GameObject> _noInstanceList;
         private static readonly List<object> _keys;
-        private static readonly string[] _filters;
 
-        public static IReadOnlyList<object> Keys
-            => _keys;
+        public static IReadOnlyList<object> Keys => _keys;
+
+        public static ExceptionHandleType ExceptionHandle { get; set; }
+
+        public static bool SuppressWarningLogs { get; set; }
+
+        public static bool SuppressErrorLogs { get; set; }
 
         static AddressablesManager()
         {
+            ExceptionHandle = ExceptionHandleType.Log;
+
             _locations = new Dictionary<string, List<IResourceLocation>>();
             _noLocation = new List<IResourceLocation>(0);
             _assets = new Dictionary<string, Object>();
@@ -31,7 +42,6 @@ namespace UnityEngine.AddressableAssets
             _instanceListPool = new Queue<List<GameObject>>();
             _noInstanceList = new List<GameObject>(0);
             _keys = new List<object>();
-            _filters = new[] { "\n", "\r" };
         }
 
         private static void Clear()
@@ -60,11 +70,6 @@ namespace UnityEngine.AddressableAssets
         {
             result = key ?? string.Empty;
 
-            for (var i = 0; i < _filters.Length; i++)
-            {
-                result = result.Replace(_filters[i], string.Empty);
-            }
-
             return !string.IsNullOrEmpty(result);
         }
 
@@ -72,7 +77,12 @@ namespace UnityEngine.AddressableAssets
         {
             if (reference == null)
             {
-                Debug.LogException(new System.ArgumentNullException(nameof(reference)));
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new ArgumentNullException(nameof(reference));
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new ArgumentNullException(nameof(reference)));
+
                 result = string.Empty;
             }
             else
@@ -89,96 +99,29 @@ namespace UnityEngine.AddressableAssets
         public static bool ContainsKey(object key)
             => _keys.Contains(key);
 
-        public static void Initialize()
-        {
-            Clear();
-
-            var operation = Addressables.InitializeAsync();
-            operation.Completed += handle => OnInitializeCompleted(handle);
-        }
-
-        public static void LoadLocations(object key)
-        {
-            if (key == null)
-                return;
-
-            var operation = Addressables.LoadResourceLocationsAsync(key);
-            operation.Completed += handle => OnLoadLocationsCompleted(handle, key);
-        }
-
-        public static void LoadAsset<T>(string key) where T : Object
-        {
-            if (!GuardKey(key, out key))
-                return;
-
-            if (!_assets.ContainsKey(key))
-            {
-                var operation = Addressables.LoadAssetAsync<T>(key);
-                operation.Completed += handle => OnLoadAssetCompleted(handle, key);
-                return;
-            }
-
-            if (!(_assets[key] is T))
-            {
-                Debug.LogWarning($"The asset with key={key} is not an instance of {typeof(T)}.");
-            }
-        }
-
-        public static void LoadAsset<T>(AssetReferenceT<T> reference) where T : Object
-        {
-            if (!GuardKey(reference, out var key))
-                return;
-
-            if (!_assets.ContainsKey(key))
-            {
-                var operation = reference.LoadAssetAsync<T>();
-                operation.Completed += handle => OnLoadAssetCompleted(handle, key);
-                return;
-            }
-
-            if (!(_assets[key] is T))
-            {
-                Debug.LogWarning($"The asset with key={key} is not an instance of {typeof(T)}.");
-            }
-        }
-
-        public static void LoadScene(string key, LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
-        {
-            if (!GuardKey(key, out key))
-                return;
-
-            if (_scenes.ContainsKey(key))
-                return;
-
-            var operation = Addressables.LoadSceneAsync(key, loadMode, activeOnLoad, priority);
-            operation.Completed += handle => OnLoadSceneCompleted(handle, key);
-        }
-
-        public static void LoadScene(AssetReference reference, LoadSceneMode loadMode, bool activeOnLoad = true,
-            int priority = 100)
-        {
-            if (!GuardKey(reference, out var key))
-                return;
-
-            if (_scenes.ContainsKey(key))
-                return;
-
-            var operation = reference.LoadSceneAsync(loadMode, activeOnLoad, priority);
-            operation.Completed += handle => OnLoadSceneCompleted(handle, key);
-        }
-
         public static bool TryGetScene(string key, out SceneInstance scene)
         {
             scene = default;
 
             if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return false;
+            }
 
             if (_scenes.TryGetValue(key, out var value))
             {
                 scene = value;
                 return true;
             }
+
+            if (!SuppressWarningLogs)
+                Debug.LogWarning($"No scene with key={key} has been loaded through {nameof(AddressablesManager)}.");
 
             return false;
         }
@@ -188,7 +131,15 @@ namespace UnityEngine.AddressableAssets
             scene = default;
 
             if (!GuardKey(reference, out var key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw Exceptions.InvalidReference;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return false;
+            }
 
             if (_scenes.TryGetValue(key, out var value))
             {
@@ -199,52 +150,18 @@ namespace UnityEngine.AddressableAssets
             return false;
         }
 
-        public static void UnloadScene(string key, bool autoReleaseHandle = true)
-        {
-            if (!GuardKey(key, out key))
-                return;
-
-            if (!_scenes.TryGetValue(key, out var scene))
-                return;
-
-            _scenes.Remove(key);
-            Addressables.UnloadSceneAsync(scene, autoReleaseHandle);
-        }
-
-        public static void UnloadScene(AssetReference reference)
-        {
-            if (!GuardKey(reference, out var key))
-                return;
-
-            if (!_scenes.ContainsKey(key))
-                return;
-
-            _scenes.Remove(key);
-            reference.UnLoadScene();
-        }
-
-        public static void Instantiate(string key, Transform parent = null, bool inWorldSpace = false, bool trackHandle = true)
-        {
-            if (!GuardKey(key, out key))
-                return;
-
-            var operation = Addressables.InstantiateAsync(key, parent, inWorldSpace, trackHandle);
-            operation.Completed += handle => OnInstantiateCompleted(handle, key);
-        }
-
-        public static void Instantiate(AssetReference reference, Transform parent = null, bool inWorldSpace = false)
-        {
-            if (!GuardKey(reference, out var key))
-                return;
-
-            var operation = reference.InstantiateAsync(parent, inWorldSpace);
-            operation.Completed += handle => OnInstantiateCompleted(handle, key);
-        }
-
         public static IReadOnlyList<IResourceLocation> GetLocations(string key)
         {
             if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return _noLocation;
+            }
 
             if (!_locations.TryGetValue(key, out var list))
                 return _noLocation;
@@ -255,7 +172,15 @@ namespace UnityEngine.AddressableAssets
         public static T GetAsset<T>(string key) where T : Object
         {
             if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return default;
+            }
 
             return GetAssetInternal<T>(key);
         }
@@ -263,7 +188,15 @@ namespace UnityEngine.AddressableAssets
         public static T GetAsset<T>(AssetReference reference) where T : Object
         {
             if (!GuardKey(reference, out var key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw Exceptions.InvalidReference;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return default;
+            }
 
             return GetAssetInternal<T>(key);
         }
@@ -272,14 +205,18 @@ namespace UnityEngine.AddressableAssets
         {
             if (!_assets.ContainsKey(key))
             {
-                Debug.LogWarning($"Cannot find any asset by key={key}.");
+                if (!SuppressWarningLogs)
+                    Debug.LogWarning(Exceptions.CannotFindAssetByKey(key));
+
                 return default;
             }
 
             if (_assets[key] is T asset)
                 return asset;
 
-            Debug.LogWarning($"The asset with key={key} is not an instance of {typeof(T)}.");
+            if (!SuppressWarningLogs)
+                Debug.LogWarning(Exceptions.AssetKeyNotInstanceOf<T>(key));
+
             return default;
         }
 
@@ -288,7 +225,15 @@ namespace UnityEngine.AddressableAssets
             asset = default;
 
             if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return false;
+            }
 
             return TryGetAssetInternal<T>(key, out asset);
         }
@@ -298,7 +243,15 @@ namespace UnityEngine.AddressableAssets
             asset = default;
 
             if (!GuardKey(reference, out var key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw Exceptions.InvalidReference;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return false;
+            }
 
             return TryGetAssetInternal<T>(key, out asset);
         }
@@ -309,7 +262,9 @@ namespace UnityEngine.AddressableAssets
 
             if (!_assets.ContainsKey(key))
             {
-                Debug.LogWarning($"Cannot find any asset by key={key}.");
+                if (!SuppressWarningLogs)
+                    Debug.LogWarning(Exceptions.CannotFindAssetByKey(key));
+
                 return false;
             }
 
@@ -319,14 +274,24 @@ namespace UnityEngine.AddressableAssets
                 return true;
             }
 
-            Debug.LogWarning($"The asset with key={key} is not an instance of {typeof(T)}.");
+            if (!SuppressWarningLogs)
+                Debug.LogWarning(Exceptions.AssetKeyNotInstanceOf<T>(key));
+
             return false;
         }
 
         public static void ReleaseAsset(string key)
         {
             if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return;
+            }
 
             if (!_assets.TryGetValue(key, out var asset))
                 return;
@@ -338,7 +303,15 @@ namespace UnityEngine.AddressableAssets
         public static void ReleaseAsset(AssetReference reference)
         {
             if (!GuardKey(reference, out var key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw Exceptions.InvalidReference;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return;
+            }
 
             if (!_assets.ContainsKey(key))
                 return;
@@ -350,7 +323,15 @@ namespace UnityEngine.AddressableAssets
         public static IReadOnlyList<GameObject> GetInstances(string key)
         {
             if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return _noInstanceList;
+            }
 
             if (_instances.TryGetValue(key, out var instanceList))
                 return instanceList;
@@ -361,7 +342,15 @@ namespace UnityEngine.AddressableAssets
         public static IReadOnlyList<GameObject> GetInstances(AssetReference reference)
         {
             if (!GuardKey(reference, out var key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw Exceptions.InvalidReference;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return _noInstanceList;
+            }
 
             if (_instances.TryGetValue(key, out var instanceList))
                 return instanceList;
@@ -372,7 +361,15 @@ namespace UnityEngine.AddressableAssets
         public static void ReleaseInstances(string key)
         {
             if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return;
+            }
 
             ReleaseInstanceInternal(key);
         }
@@ -380,7 +377,15 @@ namespace UnityEngine.AddressableAssets
         public static void ReleaseInstances(AssetReference reference)
         {
             if (!GuardKey(reference, out var key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw Exceptions.InvalidReference;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return;
+            }
 
             ReleaseInstanceInternal(key);
         }
@@ -403,7 +408,15 @@ namespace UnityEngine.AddressableAssets
         public static void ReleaseInstance(string key, GameObject instance)
         {
             if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return;
+            }
 
             ReleaseInstanceInternal(key, instance);
         }
@@ -411,7 +424,15 @@ namespace UnityEngine.AddressableAssets
         public static void ReleaseInstance(AssetReference reference, GameObject instance)
         {
             if (!GuardKey(reference, out var key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw Exceptions.InvalidReference;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
                 return;
+            }
 
             ReleaseInstanceInternal(key, instance);
         }
@@ -422,13 +443,20 @@ namespace UnityEngine.AddressableAssets
                 return;
 
             if (!_instances.TryGetValue(key, out var instanceList))
+            {
+                if (!SuppressWarningLogs)
+                    Debug.LogWarning(Exceptions.NoInstanceKeyInitialized(key), instance);
+
                 return;
+            }
 
             var index = instanceList.FindIndex(x => x.GetInstanceID() == instance.GetInstanceID());
 
             if (index < 0)
             {
-                Debug.LogWarning($"The instance was not instantiated through {nameof(AddressablesManager)} therefore it cannot be unloaded by this method.", instance);
+                if (!SuppressWarningLogs)
+                    Debug.LogWarning(Exceptions.NoInstanceKeyInitialized(key), instance);
+
                 return;
             }
 

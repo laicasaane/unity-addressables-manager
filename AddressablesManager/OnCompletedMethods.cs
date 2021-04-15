@@ -11,8 +11,7 @@ namespace UnityEngine.AddressableAssets
 
     public static partial class AddressablesManager
     {
-        private static void OnInitializeCompleted(AsyncOperationHandle<IResourceLocator> handle,
-                                                  Action onSucceeded = null, Action onFailed = null)
+        private static void OnInitializeCompleted(AsyncOperationHandle<IResourceLocator> handle, Action onSucceeded = null, Action onFailed = null)
         {
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
@@ -24,8 +23,7 @@ namespace UnityEngine.AddressableAssets
             onSucceeded?.Invoke();
         }
 
-        private static void OnLoadLocationsCompleted(AsyncOperationHandle<IList<IResourceLocation>> handle, object key,
-                                                     Action<object> onSucceeded = null, Action<object> onFailed = null)
+        private static void OnLoadLocationsCompleted(AsyncOperationHandle<IList<IResourceLocation>> handle, object key, Action<object> onSucceeded = null, Action<object> onFailed = null)
         {
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
@@ -59,8 +57,7 @@ namespace UnityEngine.AddressableAssets
                 onSucceeded?.Invoke(key);
         }
 
-        private static void OnLoadAssetCompleted<T>(AsyncOperationHandle<T> handle, string key,
-                                                    Action<string, T> onSucceeded = null, Action<string> onFailed = null)
+        private static void OnLoadAssetCompleted<T>(AsyncOperationHandle<T> handle, string key, bool useReference, Action<string, T> onSucceeded = null, Action<string> onFailed = null)
             where T : Object
         {
             if (handle.Status != AsyncOperationStatus.Succeeded)
@@ -71,7 +68,9 @@ namespace UnityEngine.AddressableAssets
 
             if (!handle.Result)
             {
-                Debug.LogError($"Cannot load any asset of type {typeof(T)} by key={key}.");
+                if (!SuppressErrorLogs)
+                    Debug.LogError(useReference ? Exceptions.CannotLoadAssetReference<T>(key) : Exceptions.CannotLoadAssetKey<T>(key));
+
                 onFailed?.Invoke(key);
                 return;
             }
@@ -80,7 +79,9 @@ namespace UnityEngine.AddressableAssets
             {
                 if (!(_assets[key] is T))
                 {
-                    Debug.LogError($"An asset of type={_assets[key].GetType()} has been already registered with key={key}.");
+                    if (!SuppressErrorLogs)
+                        Debug.LogError(useReference ? Exceptions.AssetReferenceExist(_assets[key].GetType(), key) : Exceptions.AssetKeyExist(_assets[key].GetType(), key));
+
                     onFailed?.Invoke(key);
                     return;
                 }
@@ -93,8 +94,7 @@ namespace UnityEngine.AddressableAssets
             onSucceeded?.Invoke(key, handle.Result);
         }
 
-        private static void OnInstantiateCompleted(AsyncOperationHandle<GameObject> handle, string key,
-                                                   Action<string, GameObject> onSucceeded = null, Action<string> onFailed = null)
+        private static void OnInstantiateCompleted(AsyncOperationHandle<GameObject> handle, string key, bool useReference, Action<string, GameObject> onSucceeded = null, Action<string> onFailed = null)
         {
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
@@ -104,7 +104,9 @@ namespace UnityEngine.AddressableAssets
 
             if (!handle.Result)
             {
-                Debug.LogError($"Cannot instantiate key={key}.");
+                if (!SuppressErrorLogs)
+                    Debug.LogError(useReference ? Exceptions.CannotInstantiateReference(key) : Exceptions.CannotInstantiateKey(key));
+
                 onFailed?.Invoke(key);
                 return;
             }
@@ -116,8 +118,7 @@ namespace UnityEngine.AddressableAssets
             onSucceeded?.Invoke(key, handle.Result);
         }
 
-        private static void OnLoadSceneCompleted(AsyncOperationHandle<SceneInstance> handle, string key,
-                                                 Action<Scene> onSucceeded = null, Action<string> onFailed = null)
+        private static void OnLoadSceneCompleted(AsyncOperationHandle<SceneInstance> handle, string key, Action<Scene> onSucceeded = null, Action<string> onFailed = null)
         {
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
@@ -130,8 +131,7 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        private static void OnUnloadSceneCompleted(AsyncOperationHandle<SceneInstance> handle, string key,
-                                                   Action<string> onSucceeded, Action<string> onFailed)
+        private static void OnUnloadSceneCompleted(AsyncOperationHandle<SceneInstance> handle, string key, Action<string> onSucceeded, Action<string> onFailed)
         {
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
