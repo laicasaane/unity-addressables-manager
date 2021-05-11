@@ -26,10 +26,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return default;
@@ -40,10 +40,10 @@ namespace UnityEngine.AddressableAssets
         {
             if (key == null)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw new InvalidKeyException(key);
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
                 return new OperationResult<object>(false, key);
@@ -59,10 +59,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return new OperationResult<object>(false, key);
@@ -73,10 +73,10 @@ namespace UnityEngine.AddressableAssets
         {
             if (!GuardKey(key, out key))
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw new InvalidKeyException(key);
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
                 return default;
@@ -103,10 +103,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return default;
@@ -117,10 +117,10 @@ namespace UnityEngine.AddressableAssets
         {
             if (!GuardKey(reference, out var key))
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw Exceptions.InvalidReference;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
                 return default;
@@ -147,10 +147,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return default;
@@ -161,10 +161,10 @@ namespace UnityEngine.AddressableAssets
         {
             if (!GuardKey(key, out key))
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw new InvalidKeyException(key);
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
                 return default;
@@ -183,10 +183,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return default;
@@ -197,10 +197,10 @@ namespace UnityEngine.AddressableAssets
         {
             if (!GuardKey(reference, out var key))
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw Exceptions.InvalidReference;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
                 return default;
@@ -219,10 +219,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return default;
@@ -233,10 +233,10 @@ namespace UnityEngine.AddressableAssets
         {
             if (!GuardKey(key, out key))
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw new InvalidKeyException(key);
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
                 return default;
@@ -261,10 +261,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return new OperationResult<SceneInstance>(false, in scene);
@@ -275,10 +275,10 @@ namespace UnityEngine.AddressableAssets
         {
             if (!GuardKey(reference, out var key))
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw Exceptions.InvalidReference;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
                 return default;
@@ -303,10 +303,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return new OperationResult<SceneInstance>(false, scene);
@@ -317,10 +317,10 @@ namespace UnityEngine.AddressableAssets
         {
             if (!GuardKey(key, out key))
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw new InvalidKeyException(key);
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
                 return default;
@@ -336,10 +336,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return default;
@@ -350,10 +350,10 @@ namespace UnityEngine.AddressableAssets
         {
             if (!GuardKey(reference, out var key))
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw Exceptions.InvalidReference;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
                 return default;
@@ -369,10 +369,10 @@ namespace UnityEngine.AddressableAssets
             }
             catch (Exception ex)
             {
-                if (ExceptionHandling == ExceptionHandlingType.Throw)
+                if (ExceptionHandle == ExceptionHandleType.Throw)
                     throw ex;
 
-                if (ExceptionHandling == ExceptionHandlingType.Log)
+                if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
                 return default;
