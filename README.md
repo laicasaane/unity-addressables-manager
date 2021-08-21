@@ -5,6 +5,14 @@
 
 # Changelog
 
+## 1.2.1
+
+- `LoadScene` methods will now activate scene if `activateOnLoad` param is `true`
+- **Breaking changes:** Correct the signature of `onSucceeded` callbacks on `LoadSceneCoroutine` and some `LoadScene` methods.
+- **Note:** Regarding the behaviour of `activateOnLoad`, please read this documentation:
+https://docs.unity3d.com/Packages/com.unity.addressables@1.16/manual/LoadSceneAsync.html
+
+
 ## 1.2.0
 
 - Support synchronous APIs in Addressables 1.17
