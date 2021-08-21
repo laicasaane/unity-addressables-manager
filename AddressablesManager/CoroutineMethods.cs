@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 
 namespace UnityEngine.AddressableAssets
 {
     public static partial class AddressablesManager
     {
-        public static IEnumerator InitializeCoroutine(Action onSucceeded = null, Action onFailed = null)
+        public static IEnumerator InitializeCoroutine(Action onSucceeded = null,
+                                                      Action onFailed = null)
         {
             Clear();
 
@@ -16,7 +18,8 @@ namespace UnityEngine.AddressableAssets
             OnInitializeCompleted(operation, onSucceeded, onFailed);
         }
 
-        public static IEnumerator LoadLocationsCoroutine(object key, Action<object> onSucceeded = null, Action<object> onFailed = null)
+        public static IEnumerator LoadLocationsCoroutine(object key,
+            Action<object> onSucceeded = null, Action<object> onFailed = null)
         {
             if (key == null)
             {
@@ -31,7 +34,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static IEnumerator LoadAssetCoroutine<T>(string key, Action<string, T> onSucceeded = null, Action<string> onFailed = null) where T : Object
+        public static IEnumerator LoadAssetCoroutine<T>(string key,
+                                                        Action<string, T> onSucceeded = null,
+                                                        Action<string> onFailed = null)
+            where T : Object
         {
             if (!GuardKey(key, out key))
             {
@@ -60,7 +66,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static IEnumerator LoadAssetCoroutine<T>(AssetReferenceT<T> reference, Action<string, T> onSucceeded = null, Action<string> onFailed = null) where T : Object
+        public static IEnumerator LoadAssetCoroutine<T>(AssetReferenceT<T> reference,
+                                                        Action<string, T> onSucceeded = null,
+                                                        Action<string> onFailed = null)
+            where T : Object
         {
             if (!GuardKey(reference, out var key))
             {
@@ -89,7 +98,20 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static IEnumerator LoadSceneCoroutine(string key, LoadSceneMode loadMode = LoadSceneMode.Single, bool activeOnLoad = true, int priority = 100, Action<Scene> onSucceeded = null, Action<string> onFailed = null)
+        private static IEnumerator ActivateSceneCoroutine(SceneInstance instance, int priority)
+        {
+            var operation = instance.ActivateAsync();
+            operation.priority = priority;
+
+            yield return operation;
+        }
+
+        public static IEnumerator LoadSceneCoroutine(string key,
+                                                     LoadSceneMode loadMode = LoadSceneMode.Single,
+                                                     bool activateOnLoad = true,
+                                                     int priority = 100,
+                                                     Action<SceneInstance> onSucceeded = null,
+                                                     Action<string> onFailed = null)
         {
             if (!GuardKey(key, out key))
             {
@@ -97,13 +119,18 @@ namespace UnityEngine.AddressableAssets
             }
             else
             {
-                if (_scenes.ContainsKey(key))
+                if (_scenes.TryGetValue(key, out var scene))
                 {
-                    onSucceeded?.Invoke(_scenes[key].Scene);
+                    if (activateOnLoad)
+                    {
+                        yield return ActivateSceneCoroutine(scene, priority);
+                    }
+
+                    onSucceeded?.Invoke(scene);
                 }
                 else
                 {
-                    var operation = Addressables.LoadSceneAsync(key, loadMode, activeOnLoad, priority);
+                    var operation = Addressables.LoadSceneAsync(key, loadMode, activateOnLoad, priority);
                     yield return operation;
 
                     OnLoadSceneCompleted(operation, key, onSucceeded, onFailed);
@@ -111,7 +138,12 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static IEnumerator LoadSceneCoroutine(AssetReference reference, LoadSceneMode loadMode = LoadSceneMode.Single, bool activeOnLoad = true, int priority = 100, Action<Scene> onSucceeded = null, Action<string> onFailed = null)
+        public static IEnumerator LoadSceneCoroutine(AssetReference reference,
+                                                     LoadSceneMode loadMode = LoadSceneMode.Single,
+                                                     bool activateOnLoad = true,
+                                                     int priority = 100,
+                                                     Action<SceneInstance> onSucceeded = null,
+                                                     Action<string> onFailed = null)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -119,13 +151,18 @@ namespace UnityEngine.AddressableAssets
             }
             else
             {
-                if (_assets.ContainsKey(key))
+                if (_scenes.TryGetValue(key, out var scene))
                 {
-                    onSucceeded?.Invoke(_scenes[key].Scene);
+                    if (activateOnLoad)
+                    {
+                        yield return ActivateSceneCoroutine(scene, priority);
+                    }
+
+                    onSucceeded?.Invoke(scene);
                 }
                 else
                 {
-                    var operation = reference.LoadSceneAsync(loadMode, activeOnLoad, priority);
+                    var operation = reference.LoadSceneAsync(loadMode, activateOnLoad, priority);
                     yield return operation;
 
                     OnLoadSceneCompleted(operation, key, onSucceeded, onFailed);
@@ -133,7 +170,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static IEnumerator UnloadSceneCoroutine(string key, bool autoReleaseHandle = true, Action<string> onSucceeded = null, Action<string> onFailed = null)
+        public static IEnumerator UnloadSceneCoroutine(string key,
+                                                       bool autoReleaseHandle = true,
+                                                       Action<string> onSucceeded = null,
+                                                       Action<string> onFailed = null)
         {
             if (!GuardKey(key, out key))
             {
@@ -157,7 +197,9 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static IEnumerator UnloadSceneCoroutine(AssetReference reference, Action<string> onSucceeded = null, Action<string> onFailed = null)
+        public static IEnumerator UnloadSceneCoroutine(AssetReference reference,
+                                                       Action<string> onSucceeded = null,
+                                                       Action<string> onFailed = null)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -181,7 +223,12 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static IEnumerator InstantiateCoroutine(string key, Transform parent = null, bool inWorldSpace = false, bool trackHandle = true, Action<string, GameObject> onSucceeded = null, Action<string> onFailed = null)
+        public static IEnumerator InstantiateCoroutine(string key,
+                                                       Transform parent = null,
+                                                       bool inWorldSpace = false,
+                                                       bool trackHandle = true,
+                                                       Action<string, GameObject> onSucceeded = null,
+                                                       Action<string> onFailed = null)
         {
             if (!GuardKey(key, out key))
             {
@@ -196,7 +243,11 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static IEnumerator InstantiateCoroutine(AssetReference reference, Transform parent = null, bool inWorldSpace = false, Action<string, GameObject> onSucceeded = null, Action<string> onFailed = null)
+        public static IEnumerator InstantiateCoroutine(AssetReference reference,
+                                                       Transform parent = null,
+                                                       bool inWorldSpace = false,
+                                                       Action<string, GameObject> onSucceeded = null,
+                                                       Action<string> onFailed = null)
         {
             if (!GuardKey(reference, out var key))
             {

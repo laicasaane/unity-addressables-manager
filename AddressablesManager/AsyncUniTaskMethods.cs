@@ -159,7 +159,18 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static async UniTask<OperationResult<SceneInstance>> LoadSceneAsync(string key, LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
+        public static async UniTask ActivateSceneAsync(SceneInstance scene, int priority)
+        {
+            var operation = scene.ActivateAsync();
+            operation.priority = priority;
+
+            await operation;
+        }
+
+        public static async UniTask<OperationResult<SceneInstance>> LoadSceneAsync(string key,
+                                                                                   LoadSceneMode loadMode = LoadSceneMode.Single,
+                                                                                   bool activateOnLoad = true,
+                                                                                   int priority = 100)
         {
             if (!GuardKey(key, out key))
             {
@@ -172,12 +183,17 @@ namespace UnityEngine.AddressableAssets
                 return default;
             }
 
-            if (_scenes.ContainsKey(key))
-                return new OperationResult<SceneInstance>(true, _scenes[key]);
+            if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad )
+                    await ActivateSceneAsync(scene, priority);
+
+                return new OperationResult<SceneInstance>(true, in scene);
+            }
 
             try
             {
-                var operation = Addressables.LoadSceneAsync(key, loadMode, activeOnLoad, priority);
+                var operation = Addressables.LoadSceneAsync(key, loadMode, activateOnLoad , priority);
                 await operation;
 
                 OnLoadSceneCompleted(operation, key);
@@ -195,7 +211,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static async UniTask<OperationResult<SceneInstance>> LoadSceneAsync(AssetReference reference, LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
+        public static async UniTask<OperationResult<SceneInstance>> LoadSceneAsync(AssetReference reference,
+                                                                                   LoadSceneMode loadMode = LoadSceneMode.Single,
+                                                                                   bool activateOnLoad = true,
+                                                                                   int priority = 100)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -208,12 +227,17 @@ namespace UnityEngine.AddressableAssets
                 return default;
             }
 
-            if (_assets.ContainsKey(key))
-                return new OperationResult<SceneInstance>(true, _scenes[key]);
+            if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                    await ActivateSceneAsync(scene, priority);
+
+                return new OperationResult<SceneInstance>(true, in scene);
+            }
 
             try
             {
-                var operation = reference.LoadSceneAsync(loadMode, activeOnLoad, priority);
+                var operation = reference.LoadSceneAsync(loadMode, activateOnLoad, priority);
                 await operation;
 
                 OnLoadSceneCompleted(operation, key);
@@ -315,7 +339,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static async UniTask<OperationResult<GameObject>> InstantiateAsync(string key, Transform parent = null, bool inWorldSpace = false, bool trackHandle = true)
+        public static async UniTask<OperationResult<GameObject>> InstantiateAsync(string key,
+                                                                                  Transform parent = null,
+                                                                                  bool inWorldSpace = false,
+                                                                                  bool trackHandle = true)
         {
             if (!GuardKey(key, out key))
             {
@@ -348,7 +375,9 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static async UniTask<OperationResult<GameObject>> InstantiateAsync(AssetReference reference, Transform parent = null, bool inWorldSpace = false)
+        public static async UniTask<OperationResult<GameObject>> InstantiateAsync(AssetReference reference,
+                                                                                  Transform parent = null,
+                                                                                  bool inWorldSpace = false)
         {
             if (!GuardKey(reference, out var key))
             {

@@ -130,7 +130,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void LoadScene(string key, LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
+        public static void LoadScene(string key,
+                                     LoadSceneMode loadMode = LoadSceneMode.Single,
+                                     bool activateOnLoad = true,
+                                     int priority = 100)
         {
             if (!GuardKey(key, out key))
             {
@@ -143,12 +146,20 @@ namespace UnityEngine.AddressableAssets
                 return;
             }
 
-            if (_scenes.ContainsKey(key))
+            if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                {
+                    var operation = scene.ActivateAsync();
+                    operation.priority = priority;
+                }
+
                 return;
+            }
 
             try
             {
-                var operation = Addressables.LoadSceneAsync(key, loadMode, activeOnLoad, priority);
+                var operation = Addressables.LoadSceneAsync(key, loadMode, activateOnLoad, priority);
                 operation.Completed += handle => OnLoadSceneCompleted(handle, key);
             }
             catch (Exception ex)
@@ -161,7 +172,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void LoadScene(AssetReference reference, LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
+        public static void LoadScene(AssetReference reference,
+                                     LoadSceneMode loadMode = LoadSceneMode.Single,
+                                     bool activateOnLoad = true,
+                                     int priority = 100)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -174,12 +188,20 @@ namespace UnityEngine.AddressableAssets
                 return;
             }
 
-            if (_scenes.ContainsKey(key))
+            if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                {
+                    var operation = scene.ActivateAsync();
+                    operation.priority = priority;
+                }
+
                 return;
+            }
 
             try
             {
-                var operation = reference.LoadSceneAsync(loadMode, activeOnLoad, priority);
+                var operation = reference.LoadSceneAsync(loadMode, activateOnLoad, priority);
                 operation.Completed += handle => OnLoadSceneCompleted(handle, key);
             }
             catch (Exception ex)
@@ -267,7 +289,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void Instantiate(string key, Transform parent = null, bool inWorldSpace = false, bool trackHandle = true)
+        public static void Instantiate(string key,
+                                       Transform parent = null,
+                                       bool inWorldSpace = false,
+                                       bool trackHandle = true)
         {
             if (!GuardKey(key, out key))
             {
@@ -295,7 +320,9 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void Instantiate(AssetReference reference, Transform parent = null, bool inWorldSpace = false)
+        public static void Instantiate(AssetReference reference,
+                                       Transform parent = null,
+                                       bool inWorldSpace = false)
         {
             if (!GuardKey(reference, out var key))
             {

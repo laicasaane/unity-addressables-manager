@@ -336,7 +336,17 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static SceneInstance LoadSceneSync(string key, LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
+        private static void ActivateSceneSync(in SceneInstance instance, int priority)
+        {
+            var operation = instance.ActivateAsync();
+            operation.priority = priority;
+            operation.WaitForCompletion();
+        }
+
+        public static SceneInstance LoadSceneSync(string key,
+                                                  LoadSceneMode loadMode = LoadSceneMode.Single,
+                                                  bool activateOnLoad = true,
+                                                  int priority = 100)
         {
             if (!GuardKey(key, out key))
             {
@@ -350,11 +360,16 @@ namespace UnityEngine.AddressableAssets
             }
 
             if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                    ActivateSceneSync(scene, priority);
+
                 return scene;
+            }
 
             try
             {
-                var operation = Addressables.LoadSceneAsync(key, loadMode, activeOnLoad, priority);
+                var operation = Addressables.LoadSceneAsync(key, loadMode, activateOnLoad, priority);
                 var result = operation.WaitForCompletion();
                 OnLoadSceneCompleted(operation, key);
 
@@ -372,7 +387,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static bool TryLoadSceneSync(string key, LoadSceneMode loadMode, out SceneInstance result, bool activeOnLoad = true, int priority = 100)
+        public static bool TryLoadSceneSync(string key, out SceneInstance result,
+                                            LoadSceneMode loadMode = LoadSceneMode.Single,
+                                            bool activateOnLoad = true,
+                                            int priority = 100)
         {
             if (!GuardKey(key, out key))
             {
@@ -386,12 +404,18 @@ namespace UnityEngine.AddressableAssets
                 return false;
             }
 
-            if (_scenes.TryGetValue(key, out result))
+            if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                    ActivateSceneSync(scene, priority);
+
+                result = scene;
                 return true;
+            }
 
             try
             {
-                var operation = Addressables.LoadSceneAsync(key, loadMode, activeOnLoad, priority);
+                var operation = Addressables.LoadSceneAsync(key, loadMode, activateOnLoad, priority);
                 result = operation.WaitForCompletion();
                 OnLoadSceneCompleted(operation, key);
 
@@ -410,7 +434,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static SceneInstance LoadSceneSync(AssetReference reference, LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
+        public static SceneInstance LoadSceneSync(AssetReference reference,
+                                                  LoadSceneMode loadMode = LoadSceneMode.Single,
+                                                  bool activateOnLoad = true,
+                                                  int priority = 100)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -424,11 +451,16 @@ namespace UnityEngine.AddressableAssets
             }
 
             if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                    ActivateSceneSync(scene, priority);
+
                 return scene;
+            }
 
             try
             {
-                var operation = reference.LoadSceneAsync(loadMode, activeOnLoad, priority);
+                var operation = reference.LoadSceneAsync(loadMode, activateOnLoad, priority);
                 var result = operation.WaitForCompletion();
                 OnLoadSceneCompleted(operation, key);
 
@@ -446,7 +478,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static bool LoadSceneSync(AssetReference reference, LoadSceneMode loadMode, out SceneInstance result, bool activeOnLoad = true, int priority = 100)
+        public static bool LoadSceneSync(AssetReference reference, out SceneInstance result,
+                                         LoadSceneMode loadMode = LoadSceneMode.Single,
+                                         bool activateOnLoad = true,
+                                         int priority = 100)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -460,12 +495,110 @@ namespace UnityEngine.AddressableAssets
                 return false;
             }
 
-            if (_scenes.TryGetValue(key, out result))
+            if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                    ActivateSceneSync(scene, priority);
+
+                result = scene;
                 return true;
+            }
 
             try
             {
-                var operation = reference.LoadSceneAsync(loadMode, activeOnLoad, priority);
+                var operation = reference.LoadSceneAsync(loadMode, activateOnLoad, priority);
+                result = operation.WaitForCompletion();
+                OnLoadSceneCompleted(operation, key);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw ex;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(ex);
+
+                result = default;
+                return false;
+            }
+        }
+
+        [Obsolete]
+        public static bool TryLoadSceneSync(string key, LoadSceneMode loadMode, out SceneInstance result,
+                                            bool activateOnLoad = true, int priority = 100)
+        {
+            if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
+                result = default;
+                return false;
+            }
+
+            if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                    ActivateSceneSync(scene, priority);
+
+                result = scene;
+                return true;
+            }
+
+            try
+            {
+                var operation = Addressables.LoadSceneAsync(key, loadMode, activateOnLoad, priority);
+                result = operation.WaitForCompletion();
+                OnLoadSceneCompleted(operation, key);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw ex;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(ex);
+
+                result = default;
+                return false;
+            }
+        }
+
+        [Obsolete]
+        public static bool LoadSceneSync(AssetReference reference, LoadSceneMode loadMode, out SceneInstance result,
+                                         bool activateOnLoad = true, int priority = 100)
+        {
+            if (!GuardKey(reference, out var key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw Exceptions.InvalidReference;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
+                result = default;
+                return false;
+            }
+
+            if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                    ActivateSceneSync(scene, priority);
+
+                result = scene;
+                return true;
+            }
+
+            try
+            {
+                var operation = reference.LoadSceneAsync(loadMode, activateOnLoad, priority);
                 result = operation.WaitForCompletion();
                 OnLoadSceneCompleted(operation, key);
 
@@ -525,7 +658,8 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static bool TryUnloadSceneSync(string key, out SceneInstance result, bool autoReleaseHandle = true)
+        public static bool TryUnloadSceneSync(string key, out SceneInstance result,
+                                              bool autoReleaseHandle = true)
         {
             if (!GuardKey(key, out key))
             {
@@ -654,7 +788,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static GameObject InstantiateSync(string key, Transform parent = null, bool inWorldSpace = false, bool trackHandle = true)
+        public static GameObject InstantiateSync(string key,
+                                                 Transform parent = null,
+                                                 bool inWorldSpace = false,
+                                                 bool trackHandle = true)
         {
             if (!GuardKey(key, out key))
             {
@@ -687,7 +824,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static bool TryInstantiateSync(string key, out GameObject result, Transform parent = null, bool inWorldSpace = false, bool trackHandle = true)
+        public static bool TryInstantiateSync(string key, out GameObject result,
+                                              Transform parent = null,
+                                              bool inWorldSpace = false,
+                                              bool trackHandle = true)
         {
             if (!GuardKey(key, out key))
             {
@@ -722,7 +862,9 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static GameObject InstantiateSync(AssetReference reference, Transform parent = null, bool inWorldSpace = false)
+        public static GameObject InstantiateSync(AssetReference reference,
+                                                 Transform parent = null,
+                                                 bool inWorldSpace = false)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -755,7 +897,9 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static bool TryInstantiateSync(AssetReference reference, out GameObject result, Transform parent = null, bool inWorldSpace = false)
+        public static bool TryInstantiateSync(AssetReference reference, out GameObject result,
+                                              Transform parent = null,
+                                              bool inWorldSpace = false)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -788,6 +932,40 @@ namespace UnityEngine.AddressableAssets
                 result = default;
                 return false;
             }
+        }
+    }
+
+    internal static partial class AsyncOperationExtensions
+    {
+        public static void WaitForCompletion(this AsyncOperation operation)
+        {
+            new SyncOperationAwaiter(operation).WaitForCompletion();
+        }
+    }
+
+    internal readonly struct SyncOperationAwaiter
+    {
+        private readonly AsyncOperation operation;
+
+        public SyncOperationAwaiter(AsyncOperation operation)
+        {
+            this.operation = operation;
+        }
+
+        public bool IsCompleted
+        {
+            get
+            {
+                if (this.operation == null)
+                    return true;
+
+                return this.operation.isDone;
+            }
+        }
+
+        public void WaitForCompletion()
+        {
+            while (!this.IsCompleted) { }
         }
     }
 }

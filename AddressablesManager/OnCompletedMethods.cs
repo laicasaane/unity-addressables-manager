@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine.SceneManagement;
 
 namespace UnityEngine.AddressableAssets
 {
@@ -11,7 +10,9 @@ namespace UnityEngine.AddressableAssets
 
     public static partial class AddressablesManager
     {
-        private static void OnInitializeCompleted(AsyncOperationHandle<IResourceLocator> handle, Action onSucceeded = null, Action onFailed = null)
+        private static void OnInitializeCompleted(AsyncOperationHandle<IResourceLocator> handle,
+                                                  Action onSucceeded = null,
+                                                  Action onFailed = null)
         {
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
@@ -23,7 +24,10 @@ namespace UnityEngine.AddressableAssets
             onSucceeded?.Invoke();
         }
 
-        private static void OnLoadLocationsCompleted(AsyncOperationHandle<IList<IResourceLocation>> handle, object key, Action<object> onSucceeded = null, Action<object> onFailed = null)
+        private static void OnLoadLocationsCompleted(AsyncOperationHandle<IList<IResourceLocation>> handle,
+                                                     object key,
+                                                     Action<object> onSucceeded = null,
+                                                     Action<object> onFailed = null)
         {
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
@@ -57,7 +61,11 @@ namespace UnityEngine.AddressableAssets
                 onSucceeded?.Invoke(key);
         }
 
-        private static void OnLoadAssetCompleted<T>(AsyncOperationHandle<T> handle, string key, bool useReference, Action<string, T> onSucceeded = null, Action<string> onFailed = null)
+        private static void OnLoadAssetCompleted<T>(AsyncOperationHandle<T> handle,
+                                                    string key,
+                                                    bool useReference,
+                                                    Action<string, T> onSucceeded = null,
+                                                    Action<string> onFailed = null)
             where T : Object
         {
             if (handle.Status != AsyncOperationStatus.Succeeded)
@@ -80,7 +88,12 @@ namespace UnityEngine.AddressableAssets
                 if (!(_assets[key] is T))
                 {
                     if (!SuppressErrorLogs)
-                        Debug.LogError(useReference ? Exceptions.AssetReferenceExist(_assets[key].GetType(), key) : Exceptions.AssetKeyExist(_assets[key].GetType(), key));
+                    {
+                        if (useReference)
+                            Debug.LogError(Exceptions.AssetReferenceExist(_assets[key].GetType(), key));
+                        else
+                            Debug.LogError(Exceptions.AssetKeyExist(_assets[key].GetType(), key));
+                    }
 
                     onFailed?.Invoke(key);
                     return;
@@ -94,7 +107,11 @@ namespace UnityEngine.AddressableAssets
             onSucceeded?.Invoke(key, handle.Result);
         }
 
-        private static void OnInstantiateCompleted(AsyncOperationHandle<GameObject> handle, string key, bool useReference, Action<string, GameObject> onSucceeded = null, Action<string> onFailed = null)
+        private static void OnInstantiateCompleted(AsyncOperationHandle<GameObject> handle,
+                                                   string key,
+                                                   bool useReference,
+                                                   Action<string, GameObject> onSucceeded = null,
+                                                   Action<string> onFailed = null)
         {
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
@@ -105,7 +122,12 @@ namespace UnityEngine.AddressableAssets
             if (!handle.Result)
             {
                 if (!SuppressErrorLogs)
-                    Debug.LogError(useReference ? Exceptions.CannotInstantiateReference(key) : Exceptions.CannotInstantiateKey(key));
+                {
+                    if (useReference)
+                        Debug.LogError(Exceptions.CannotInstantiateReference(key));
+                    else
+                        Debug.LogError(Exceptions.CannotInstantiateKey(key));
+                }
 
                 onFailed?.Invoke(key);
                 return;
@@ -118,12 +140,15 @@ namespace UnityEngine.AddressableAssets
             onSucceeded?.Invoke(key, handle.Result);
         }
 
-        private static void OnLoadSceneCompleted(AsyncOperationHandle<SceneInstance> handle, string key, Action<Scene> onSucceeded = null, Action<string> onFailed = null)
+        private static void OnLoadSceneCompleted(AsyncOperationHandle<SceneInstance> handle,
+                                                 string key,
+                                                 Action<SceneInstance> onSucceeded = null,
+                                                 Action<string> onFailed = null)
         {
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
                 _scenes.Add(key, handle.Result);
-                onSucceeded?.Invoke(handle.Result.Scene);
+                onSucceeded?.Invoke(handle.Result);
             }
             else if (handle.Status == AsyncOperationStatus.Failed)
             {
@@ -131,7 +156,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        private static void OnUnloadSceneCompleted(AsyncOperationHandle<SceneInstance> handle, string key, Action<string> onSucceeded, Action<string> onFailed)
+        private static void OnUnloadSceneCompleted(AsyncOperationHandle<SceneInstance> handle,
+                                                   string key,
+                                                   Action<string> onSucceeded,
+                                                   Action<string> onFailed)
         {
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {

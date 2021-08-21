@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using UnityEngine.SceneManagement;
 
 namespace UnityEngine.AddressableAssets
@@ -157,7 +158,18 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static async Task<OperationResult<SceneInstance>> LoadSceneAsync(string key, LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
+        private static async Task ActivateAsync(SceneInstance scene, int priority)
+        {
+            var operation = scene.ActivateAsync();
+            operation.priority = priority;
+
+            await operation;
+        }
+
+        public static async Task<OperationResult<SceneInstance>> LoadSceneAsync(string key,
+                                                                                LoadSceneMode loadMode = LoadSceneMode.Single,
+                                                                                bool activateOnLoad = true,
+                                                                                int priority = 100)
         {
             if (!GuardKey(key, out key))
             {
@@ -171,11 +183,16 @@ namespace UnityEngine.AddressableAssets
             }
 
             if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                    await ActivateAsync(scene, priority);
+
                 return new OperationResult<SceneInstance>(true, in scene);
+            }
 
             try
             {
-                var operation = Addressables.LoadSceneAsync(key, loadMode, activeOnLoad, priority);
+                var operation = Addressables.LoadSceneAsync(key, loadMode, activateOnLoad, priority);
                 await operation.Task;
 
                 OnLoadSceneCompleted(operation, key);
@@ -193,7 +210,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static async Task<OperationResult<SceneInstance>> LoadSceneAsync(AssetReference reference, LoadSceneMode loadMode, bool activeOnLoad = true, int priority = 100)
+        public static async Task<OperationResult<SceneInstance>> LoadSceneAsync(AssetReference reference,
+                                                                                LoadSceneMode loadMode = LoadSceneMode.Single,
+                                                                                bool activateOnLoad = true,
+                                                                                int priority = 100)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -207,11 +227,16 @@ namespace UnityEngine.AddressableAssets
             }
 
             if (_scenes.TryGetValue(key, out var scene))
+            {
+                if (activateOnLoad)
+                    await ActivateAsync(scene, priority);
+
                 return new OperationResult<SceneInstance>(true, in scene);
+            }
 
             try
             {
-                var operation = reference.LoadSceneAsync(loadMode, activeOnLoad, priority);
+                var operation = reference.LoadSceneAsync(loadMode, activateOnLoad, priority);
                 await operation.Task;
 
                 OnLoadSceneCompleted(operation, key);
@@ -313,7 +338,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static async Task<OperationResult<GameObject>> InstantiateAsync(string key, Transform parent = null, bool inWorldSpace = false, bool trackHandle = true)
+        public static async Task<OperationResult<GameObject>> InstantiateAsync(string key,
+                                                                               Transform parent = null,
+                                                                               bool inWorldSpace = false,
+                                                                               bool trackHandle = true)
         {
             if (!GuardKey(key, out key))
             {
@@ -346,7 +374,9 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static async Task<OperationResult<GameObject>> InstantiateAsync(AssetReference reference, Transform parent = null, bool inWorldSpace = false)
+        public static async Task<OperationResult<GameObject>> InstantiateAsync(AssetReference reference,
+                                                                               Transform parent = null,
+                                                                               bool inWorldSpace = false)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -378,6 +408,32 @@ namespace UnityEngine.AddressableAssets
                 return default;
             }
         }
+    }
+
+    internal static partial class AsyncOperationExtensions
+    {
+        public static AsyncOperationAwaiter GetAwaiter(this AsyncOperation operation)
+        {
+            return new AsyncOperationAwaiter(operation);
+        }
+    }
+
+    internal readonly struct AsyncOperationAwaiter : INotifyCompletion
+    {
+        private readonly AsyncOperation operation;
+
+        public AsyncOperationAwaiter(AsyncOperation operation)
+        {
+            this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
+        }
+
+        public bool IsCompleted
+            => this.operation.isDone;
+
+        public void OnCompleted(Action continuation)
+            => this.operation.completed += _ => continuation?.Invoke();
+
+        public void GetResult() { }
     }
 }
 

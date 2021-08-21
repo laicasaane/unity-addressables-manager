@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 
 namespace UnityEngine.AddressableAssets
@@ -24,7 +25,9 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void LoadLocations(object key, Action<object> onSucceeded, Action<object> onFailed = null)
+        public static void LoadLocations(object key,
+                                         Action<object> onSucceeded,
+                                         Action<object> onFailed = null)
         {
             if (key == null)
             {
@@ -47,7 +50,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void LoadAsset<T>(string key, Action<string, T> onSucceeded, Action<string> onFailed = null) where T : Object
+        public static void LoadAsset<T>(string key,
+                                        Action<string, T> onSucceeded,
+                                        Action<string> onFailed = null)
+            where T : Object
         {
             if (!GuardKey(key, out key))
             {
@@ -85,8 +91,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void LoadAsset<T>(AssetReferenceT<T> reference, Action<string, T> onSucceeded,
-            Action<string> onFailed = null) where T : Object
+        public static void LoadAsset<T>(AssetReferenceT<T> reference,
+                                        Action<string, T> onSucceeded,
+                                        Action<string> onFailed = null)
+            where T : Object
         {
             if (!GuardKey(reference, out var key))
             {
@@ -125,8 +133,19 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void LoadScene(string key, Action<Scene> onSucceeded, Action<string> onFailed = null,
-            LoadSceneMode loadMode = LoadSceneMode.Single, bool activeOnLoad = true, int priority = 100)
+        private static void ActivateScene(SceneInstance scene, int priority, Action<SceneInstance> onSucceeded)
+        {
+            var operation = scene.ActivateAsync();
+            operation.priority = priority;
+            operation.completed += _ => onSucceeded?.Invoke(scene);
+        }
+
+        public static void LoadScene(string key,
+                                     Action<SceneInstance> onSucceeded,
+                                     Action<string> onFailed = null,
+                                     LoadSceneMode loadMode = LoadSceneMode.Single,
+                                     bool activateOnLoad = true,
+                                     int priority = 100)
         {
             if (!GuardKey(key, out key))
             {
@@ -134,15 +153,19 @@ namespace UnityEngine.AddressableAssets
                 return;
             }
 
-            if (_scenes.ContainsKey(key))
+            if (_scenes.TryGetValue(key, out var scene))
             {
-                onSucceeded?.Invoke(_scenes[key].Scene);
+                if (activateOnLoad)
+                    ActivateScene(scene, priority, onSucceeded);
+                else
+                    onSucceeded?.Invoke(scene);
+
                 return;
             }
 
             try
             {
-                var operation = Addressables.LoadSceneAsync(key, loadMode, activeOnLoad, priority);
+                var operation = Addressables.LoadSceneAsync(key, loadMode, activateOnLoad, priority);
                 operation.Completed += handle => OnLoadSceneCompleted(handle, key, onSucceeded, onFailed);
             }
             catch (Exception ex)
@@ -155,8 +178,12 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void LoadScene(AssetReference reference, Action<Scene> onSucceeded, Action<string> onFailed = null,
-            LoadSceneMode loadMode = LoadSceneMode.Single, bool activeOnLoad = true, int priority = 100)
+        public static void LoadScene(AssetReference reference,
+                                     Action<SceneInstance> onSucceeded,
+                                     Action<string> onFailed = null,
+                                     LoadSceneMode loadMode = LoadSceneMode.Single,
+                                     bool activateOnLoad = true,
+                                     int priority = 100)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -164,15 +191,19 @@ namespace UnityEngine.AddressableAssets
                 return;
             }
 
-            if (_assets.ContainsKey(key))
+            if (_scenes.TryGetValue(key, out var scene))
             {
-                onSucceeded?.Invoke(_scenes[key].Scene);
+                if (activateOnLoad)
+                    ActivateScene(scene, priority, onSucceeded);
+                else
+                    onSucceeded?.Invoke(scene);
+
                 return;
             }
 
             try
             {
-                var operation = reference.LoadSceneAsync(loadMode, activeOnLoad, priority);
+                var operation = reference.LoadSceneAsync(loadMode, activateOnLoad, priority);
                 operation.Completed += handle => OnLoadSceneCompleted(handle, key, onSucceeded, onFailed);
             }
             catch (Exception ex)
@@ -185,8 +216,10 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void UnloadScene(string key, Action<string> onSucceeded = null, Action<string> onFailed = null,
-            bool autoReleaseHandle = true)
+        public static void UnloadScene(string key,
+                                       Action<string> onSucceeded = null,
+                                       Action<string> onFailed = null,
+                                       bool autoReleaseHandle = true)
         {
             if (!GuardKey(key, out key))
             {
@@ -217,7 +250,9 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void UnloadScene(AssetReference reference, Action<string> onSucceeded = null, Action<string> onFailed = null)
+        public static void UnloadScene(AssetReference reference,
+                                       Action<string> onSucceeded = null,
+                                       Action<string> onFailed = null)
         {
             if (!GuardKey(reference, out var key))
             {
@@ -248,7 +283,12 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void Instantiate(string key, Action<string, GameObject> onSucceeded, Action<string> onFailed = null, Transform parent = null, bool inWorldSpace = false, bool trackHandle = true)
+        public static void Instantiate(string key,
+                                       Action<string, GameObject> onSucceeded,
+                                       Action<string> onFailed = null,
+                                       Transform parent = null,
+                                       bool inWorldSpace = false,
+                                       bool trackHandle = true)
         {
             if (!GuardKey(key, out key))
             {
@@ -271,7 +311,11 @@ namespace UnityEngine.AddressableAssets
             }
         }
 
-        public static void Instantiate(AssetReference reference, Action<string, GameObject> onSucceeded, Action<string> onFailed = null, Transform parent = null, bool inWorldSpace = false)
+        public static void Instantiate(AssetReference reference,
+                                       Action<string, GameObject> onSucceeded,
+                                       Action<string> onFailed = null,
+                                       Transform parent = null,
+                                       bool inWorldSpace = false)
         {
             if (!GuardKey(reference, out var key))
             {
