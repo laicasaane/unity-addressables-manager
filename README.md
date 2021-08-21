@@ -5,7 +5,7 @@
 
 # Changelog
 
-## 1.2.1
+## 1.2.2
 
 - `LoadScene` methods will now activate scene if `activateOnLoad` param is `true`
 - **Breaking changes:** Correct the signature of `onSucceeded` callbacks on `LoadSceneCoroutine` and some `LoadScene` methods.
