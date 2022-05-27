@@ -337,7 +337,16 @@ namespace UnityEngine.AddressableAssets
                 return new OperationResult<SceneInstance>(false, scene);
             }
         }
-
+        /// <summary>
+        /// Instantiate a single game object and cache it int the AddressableManager for future use.
+        /// </summary>
+        /// <param name="key">The key of the location of the Object to instantiate.</param>
+        /// <param name="parent">Parent transform of instantiated object.</param>
+        /// <param name="inWorldSpace">Option to retain world space when instantiated with a parent.</param>
+        /// <param name="trackHandle">If true, Addressables will track this request to allow it to be released via the result object.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidKeyException">Exception to encapsulate invalid key errors.</exception>
+        /// <exception cref="Exception">Other exception</exception>
         public static async Task<OperationResult<GameObject>> InstantiateAsync(string key,
                                                                                Transform parent = null,
                                                                                bool inWorldSpace = false,
@@ -373,7 +382,61 @@ namespace UnityEngine.AddressableAssets
                 return default;
             }
         }
+        /// <summary>
+        /// Instantiate a single game object and cache it int the AddressableManager for future use.
+        /// </summary>
+        /// <param name="key">The key of the location of the Object to instantiate.</param>
+        /// <param name="position">The position of the instantiated object.</param>
+        /// <param name="rotation">The rotation of the instantiated object.</param>
+        /// <param name="parent">Parent transform of instantiated object.</param>
+        /// <param name="trackHandle">If true, Addressables will track this request to allow it to be released via the result object.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidKeyException">Exception to encapsulate invalid key errors.</exception>
+        /// <exception cref="Exception">Other exception</exception>
+        public static async Task<OperationResult<GameObject>> InstantiateAsync(string key, Vector3 position,
+                                                                               Quaternion rotation,
+                                                                               Transform parent = null,
+                                                                               bool trackHandle = true)
+        {
+            if (!GuardKey(key, out key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw new InvalidKeyException(key);
 
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
+                return default;
+            }
+
+            try
+            {
+                var operation = Addressables.InstantiateAsync(key, position, rotation, parent, trackHandle);
+                await operation.Task;
+
+                OnInstantiateCompleted(operation, key, false);
+                return operation;
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw ex;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(ex);
+
+                return default;
+            }
+        }
+        /// <summary>
+        /// Instantiate a single game object and cache it int the AddressableManager for future use.
+        /// </summary>
+        /// <param name="reference">Reference to an addressable asset. This can be used in script to provide fields that can be easily set in the editor and loaded dynamically at runtime. To determine if the reference is set, use RuntimeKeyIsValid().</param>
+        /// <param name="parent">The parent of the instantiated object</param>
+        /// <param name="inWorldSpace">Option to retain world space when instantiated with a parent</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidKeyException">Exception to encapsulate invalid key errors.</exception>
+        /// <exception cref="Exception">Other exception</exception>
         public static async Task<OperationResult<GameObject>> InstantiateAsync(AssetReference reference,
                                                                                Transform parent = null,
                                                                                bool inWorldSpace = false)
@@ -392,6 +455,48 @@ namespace UnityEngine.AddressableAssets
             try
             {
                 var operation = reference.InstantiateAsync(parent, inWorldSpace);
+                await operation.Task;
+
+                OnInstantiateCompleted(operation, key, true);
+                return operation;
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw ex;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(ex);
+
+                return default;
+            }
+        }
+        /// <summary>
+        /// Instantiate a single game object and cache it int the AddressableManager for future use.
+        /// </summary>
+        /// <param name="reference">Reference to an addressable asset. This can be used in script to provide fields that can be easily set in the editor and loaded dynamically at runtime. To determine if the reference is set, use RuntimeKeyIsValid().</param>
+        /// <param name="position">The position of the instantiated object.</param>
+        /// <param name="rotation">The rotation of the instantiated object.</param>
+        /// <param name="parent">The parent of the instantiated object.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidKeyException">Exception to encapsulate invalid key errors.</exception>
+        /// <exception cref="Exception">Other exception</exception>
+        public static async Task<OperationResult<GameObject>> InstantiateAsync(AssetReference reference, Vector3 position, Quaternion rotation, Transform parent = null)
+        {
+            if (!GuardKey(reference, out var key))
+            {
+                if (ExceptionHandle == ExceptionHandleType.Throw)
+                    throw Exceptions.InvalidReference;
+
+                if (ExceptionHandle == ExceptionHandleType.Log)
+                    Debug.LogException(new InvalidKeyException(key));
+
+                return default;
+            }
+
+            try
+            {
+                var operation = reference.InstantiateAsync(position, rotation, parent);
                 await operation.Task;
 
                 OnInstantiateCompleted(operation, key, true);
