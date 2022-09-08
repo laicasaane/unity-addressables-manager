@@ -13,9 +13,9 @@ namespace UnityEngine.AddressableAssets
             Clear();
 
             var operation = Addressables.InitializeAsync();
-            yield return operation;
+            operation.Completed += handle => OnInitializeCompleted(handle, onSucceeded, onFailed);
 
-            OnInitializeCompleted(operation, onSucceeded, onFailed);
+            yield return operation;
         }
 
         public static IEnumerator LoadLocationsCoroutine(object key,
