@@ -1,12 +1,13 @@
 ﻿#if ADDRESSABLES_UNITASK
 
 using System;
+using System.Collections.Generic;
+using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
 
 namespace UnityEngine.AddressableAssets
 {
-    using ResourceManagement.AsyncOperations;
     using ResourceManagement.ResourceProviders;
     using AddressableAssets.ResourceLocators;
 
@@ -22,7 +23,7 @@ namespace UnityEngine.AddressableAssets
                 await operation;
 
                 OnInitializeCompleted(operation);
-                return operation;
+                return new OperationResult<IResourceLocator>(operation);
             }
             catch (Exception ex)
             {
@@ -32,11 +33,11 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return default;
+                return new OperationResult<IResourceLocator>(false, default, default);
             }
         }
 
-        public static async UniTask<OperationResult<object>> LoadLocationsAsync(object key)
+        public static async UniTask<OperationResult<IList<IResourceLocation>>> LoadLocationsAsync(object key)
         {
             if (key == null)
             {
@@ -46,7 +47,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
-                return new OperationResult<object>(false, key);
+                return new OperationResult<IList<IResourceLocation>>(false, key, default);
             }
 
             try
@@ -55,7 +56,7 @@ namespace UnityEngine.AddressableAssets
                 await operation;
 
                 OnLoadLocationsCompleted(operation, key);
-                return new OperationResult<object>(operation.Status == AsyncOperationStatus.Succeeded, key);
+                return new OperationResult<IList<IResourceLocation>>(key, operation);
             }
             catch (Exception ex)
             {
@@ -65,7 +66,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return new OperationResult<object>(false, key);
+                return new OperationResult<IList<IResourceLocation>>(false, key, default);
             }
         }
 
@@ -79,19 +80,18 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
-                return default;
+                return new OperationResult<T>(false, key, default);
             }
 
             if (_assets.ContainsKey(key))
             {
                 if (_assets[key] is T asset)
-                    return new OperationResult<T>(true, asset);
-
+                    return new OperationResult<T>(true, key, asset);
 
                 if (!SuppressWarningLogs)
                     Debug.LogWarning(Exceptions.AssetKeyNotInstanceOf<T>(key));
 
-                return default;
+                return new OperationResult<T>(false, key, default);
             }
 
             try
@@ -100,7 +100,7 @@ namespace UnityEngine.AddressableAssets
                 await operation;
 
                 OnLoadAssetCompleted(operation, key, false);
-                return operation;
+                return new OperationResult<T>(key, operation);
             }
             catch (Exception ex)
             {
@@ -110,7 +110,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return default;
+                return new OperationResult<T>(false, key, default);
             }
         }
 
@@ -124,19 +124,18 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
-                return default;
+                return new OperationResult<T>(false, key, default);
             }
 
             if (_assets.ContainsKey(key))
             {
                 if (_assets[key] is T asset)
-                    return new OperationResult<T>(true, asset);
-
+                    return new OperationResult<T>(true, key, asset);
 
                 if (!SuppressWarningLogs)
                     Debug.LogWarning(Exceptions.AssetReferenceNotInstanceOf<T>(key));
 
-                return default;
+                return new OperationResult<T>(false, key, default);
             }
 
             try
@@ -145,7 +144,7 @@ namespace UnityEngine.AddressableAssets
                 await operation;
 
                 OnLoadAssetCompleted(operation, key, true);
-                return operation;
+                return new OperationResult<T>(key, operation);
             }
             catch (Exception ex)
             {
@@ -155,7 +154,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return default;
+                return new OperationResult<T>(false, key, default);
             }
         }
 
@@ -180,7 +179,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
-                return default;
+                return new OperationResult<SceneInstance>(false, key, default);
             }
 
             if (_scenes.TryGetValue(key, out var scene))
@@ -188,7 +187,7 @@ namespace UnityEngine.AddressableAssets
                 if (activateOnLoad )
                     await ActivateSceneAsync(scene, priority);
 
-                return new OperationResult<SceneInstance>(true, in scene);
+                return new OperationResult<SceneInstance>(true, key, in scene);
             }
 
             try
@@ -197,7 +196,7 @@ namespace UnityEngine.AddressableAssets
                 await operation;
 
                 OnLoadSceneCompleted(operation, key);
-                return operation;
+                return new OperationResult<SceneInstance>(key, operation);
             }
             catch (Exception ex)
             {
@@ -207,7 +206,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return default;
+                return new OperationResult<SceneInstance>(false, key, default);
             }
         }
 
@@ -224,7 +223,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
-                return default;
+                return new OperationResult<SceneInstance>(false, key, default);
             }
 
             if (_scenes.TryGetValue(key, out var scene))
@@ -232,7 +231,7 @@ namespace UnityEngine.AddressableAssets
                 if (activateOnLoad)
                     await ActivateSceneAsync(scene, priority);
 
-                return new OperationResult<SceneInstance>(true, in scene);
+                return new OperationResult<SceneInstance>(true, key, in scene);
             }
 
             try
@@ -241,7 +240,7 @@ namespace UnityEngine.AddressableAssets
                 await operation;
 
                 OnLoadSceneCompleted(operation, key);
-                return operation;
+                return new OperationResult<SceneInstance>(key, operation);
             }
             catch (Exception ex)
             {
@@ -251,7 +250,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return default;
+                return new OperationResult<SceneInstance>(false, key, default);
             }
         }
 
@@ -265,7 +264,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
-                return default;
+                return new OperationResult<SceneInstance>(false, key, default);
             }
 
             if (!_scenes.TryGetValue(key, out var scene))
@@ -273,7 +272,7 @@ namespace UnityEngine.AddressableAssets
                 if (!SuppressWarningLogs)
                     Debug.LogWarning(Exceptions.NoSceneKeyLoaded(key));
 
-                return default;
+                return new OperationResult<SceneInstance>(false, key, default);
             }
 
             _scenes.Remove(key);
@@ -283,7 +282,7 @@ namespace UnityEngine.AddressableAssets
                 var operation = Addressables.UnloadSceneAsync(scene, autoReleaseHandle);
                 await operation;
 
-                return operation;
+                return new OperationResult<SceneInstance>(key, operation);
             }
             catch (Exception ex)
             {
@@ -293,7 +292,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return new OperationResult<SceneInstance>(false, in scene);
+                return new OperationResult<SceneInstance>(false, key, in scene);
             }
         }
 
@@ -307,7 +306,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
-                return default;
+                return new OperationResult<SceneInstance>(false, key, default);
             }
 
             if (!_scenes.TryGetValue(key, out var scene))
@@ -315,7 +314,7 @@ namespace UnityEngine.AddressableAssets
                 if (!SuppressWarningLogs)
                     Debug.LogWarning(Exceptions.NoSceneReferenceLoaded(key));
 
-                return default;
+                return new OperationResult<SceneInstance>(false, key, default);
             }
 
             _scenes.Remove(key);
@@ -325,7 +324,7 @@ namespace UnityEngine.AddressableAssets
                 var operation = reference.UnLoadScene();
                 await operation;
 
-                return operation;
+                return new OperationResult<SceneInstance>(key, operation);
             }
             catch (Exception ex)
             {
@@ -335,7 +334,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return new OperationResult<SceneInstance>(false, scene);
+                return new OperationResult<SceneInstance>(false, key, scene);
             }
         }
 
@@ -352,7 +351,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
-                return default;
+                return new OperationResult<GameObject>(false, key, default);
             }
 
             try
@@ -361,7 +360,7 @@ namespace UnityEngine.AddressableAssets
                 await operation;
 
                 OnInstantiateCompleted(operation, key, false);
-                return operation;
+                return new OperationResult<GameObject>(key, operation);
             }
             catch (Exception ex)
             {
@@ -371,7 +370,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return default;
+                return new OperationResult<GameObject>(false, key, default);
             }
         }
 
@@ -387,7 +386,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(new InvalidKeyException(key));
 
-                return default;
+                return new OperationResult<GameObject>(false, key, default);
             }
 
             try
@@ -396,7 +395,7 @@ namespace UnityEngine.AddressableAssets
                 await operation;
 
                 OnInstantiateCompleted(operation, key, true);
-                return operation;
+                return new OperationResult<GameObject>(key, operation);
             }
             catch (Exception ex)
             {
@@ -406,7 +405,7 @@ namespace UnityEngine.AddressableAssets
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
 
-                return default;
+                return new OperationResult<GameObject>(false, key, default);
             }
         }
     }
