@@ -8,18 +8,6 @@
         public readonly object Key;
         public readonly T Value;
 
-        public OperationResult(AsyncOperationStatus status, T value) : this()
-        {
-            this.Succeeded = status == AsyncOperationStatus.Succeeded;
-            this.Value = value;
-        }
-
-        public OperationResult(AsyncOperationStatus status, in T value) : this()
-        {
-            this.Succeeded = status == AsyncOperationStatus.Succeeded;
-            this.Value = value;
-        }
-
         public OperationResult(bool succeeded, object key, T value)
         {
             this.Succeeded = succeeded;
@@ -30,20 +18,6 @@
         public OperationResult(bool succeeded, object key, in T value)
         {
             this.Succeeded = succeeded;
-            this.Key = key;
-            this.Value = value;
-        }
-
-        public OperationResult(AsyncOperationStatus status, object key, T value)
-        {
-            this.Succeeded = status == AsyncOperationStatus.Succeeded;
-            this.Key = key;
-            this.Value = value;
-        }
-
-        public OperationResult(AsyncOperationStatus status, object key, in T value)
-        {
-            this.Succeeded = status == AsyncOperationStatus.Succeeded;
             this.Key = key;
             this.Value = value;
         }
