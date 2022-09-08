@@ -5,6 +5,13 @@
 
 # Changelog
 
+## 1.3.0
+
+- Fix exception: Attempting to use an invalid operation handle
+- Add `onFailed` invocation at the end of `catch` blocks
+- Improve `OperationResult<T>` struct and the way async APIs return the result
+- BREAKING CHANGE: some constructors are removed from `OperationResult<T>` as deemed redundant
+
 ## 1.2.2
 
 - `LoadScene` methods will now activate scene if `activateOnLoad` param is `true`
