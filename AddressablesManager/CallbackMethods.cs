@@ -22,6 +22,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke();
             }
         }
 
@@ -47,6 +49,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke(key);
             }
         }
 
@@ -88,6 +92,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke(key);
             }
         }
 
@@ -130,6 +136,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke(key);
             }
         }
 
@@ -175,6 +183,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke(key);
             }
         }
 
@@ -213,6 +223,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke(key);
             }
         }
 
@@ -247,6 +259,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke(key);
             }
         }
 
@@ -280,6 +294,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke(key);
             }
         }
 
@@ -308,6 +324,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke(key);
             }
         }
 
@@ -335,6 +353,8 @@ namespace UnityEngine.AddressableAssets
 
                 if (ExceptionHandle == ExceptionHandleType.Log)
                     Debug.LogException(ex);
+
+                onFailed?.Invoke(key);
             }
         }
     }
