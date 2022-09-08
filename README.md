@@ -5,6 +5,10 @@
 
 # Changelog
 
+## 1.3.1
+
+- Correct all async APIs
+
 ## 1.3.0
 
 - Fix exception: Attempting to use an invalid operation handle
