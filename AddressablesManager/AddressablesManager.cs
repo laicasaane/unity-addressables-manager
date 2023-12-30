@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.AddressableAssets
@@ -43,6 +43,25 @@ namespace UnityEngine.AddressableAssets
             _noInstanceList = new List<GameObject>(0);
             _keys = new List<object>();
         }
+
+#if UNITY_EDITOR
+        // Support the usecase of disabled Domain Reload
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void Init()
+        {
+            _locations.Clear();
+            _noLocation.Clear();
+            _assets.Clear();
+            _scenes.Clear();
+            _instances.Clear();
+            _instanceListPool.Clear();
+            _noInstanceList.Clear();
+            _keys.Clear();
+            ExceptionHandle = default;
+            SuppressWarningLogs = default;
+            SuppressErrorLogs = default;
+        }
+#endif
 
         private static void Clear()
         {
