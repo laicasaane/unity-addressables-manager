@@ -1,7 +1,7 @@
 {
   "name": "com.laicasaane.unity-addressables-manager",
   "displayName": "Unity Addressables Manager",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "unity": "2019.1",
   "license": "MIT",
   "description": "Unity Addressables Manager",

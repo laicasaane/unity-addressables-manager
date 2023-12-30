@@ -5,6 +5,10 @@
 
 # Changelog
 
+## 1.3.2
+
+- Support the usecase of disabled Domain Reload
+
 ## 1.3.1
 
 - Correct all async APIs
